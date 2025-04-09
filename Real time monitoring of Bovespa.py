@@ -5,8 +5,8 @@ import time
 import streamlit as st
 
 # Caminho do CSV com os tickers
-caminho_arquivo = r"C:\Users\AGFAKZZ\Desktop\httpswww.dadosdemercado.com.bracoes.csv" # extraído do site https://www.dadosdemercado.com.br/acoes
-df_csv = pd.read_csv(caminho_arquivo)
+#caminho_arquivo = r"C:\Users\AGFAKZZ\Desktop\httpswww.dadosdemercado.com.bracoes.csv" # extraído do site https://www.dadosdemercado.com.br/acoes
+#df_csv = pd.read_csv(caminho_arquivo)
 
 # Ajuste o nome da coluna de acordo com o conteúdo do seu CSV
 # lista_acoes = df_csv['Ticker'].dropna().unique().tolist() # extraído do site https://www.dadosdemercado.com.br/acoes
