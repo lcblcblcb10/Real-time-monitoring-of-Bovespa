@@ -4,18 +4,8 @@ import pandas as pd
 import time
 import streamlit as st
 
-# Caminho do CSV com os tickers
-#caminho_arquivo = r"C:\Users\AGFAKZZ\Desktop\httpswww.dadosdemercado.com.bracoes.csv" # extraído do site https://www.dadosdemercado.com.br/acoes
-#df_csv = pd.read_csv(caminho_arquivo)
-
 st.set_page_config(page_title="Ações - Dados em Tempo Real", layout="wide")
-
-# Ajuste o nome da coluna de acordo com o conteúdo do seu CSV
-# lista_acoes = df_csv['Ticker'].dropna().unique().tolist() # extraído do site https://www.dadosdemercado.com.br/acoes
-lista_acoes = ["petr4", "vale3"]
-
-# Lista para armazenar os dados
-dados_extraidos = []
+st.title("📊 Dashboard de Ações - StatusInvest")
 
 def extrair_dados_acao(codigo_acao):
     url = f"https://statusinvest.com.br/acoes/{codigo_acao.lower()}"
@@ -88,43 +78,34 @@ def extrair_dados_acao(codigo_acao):
                 "Free Float": extrair("//h3[text()='Free Float']/../../following-sibling::strong[@class='value']/text()"),
                 "Setor de Atuação": extrair("//span[contains(text(), 'Setor de Atuação')]/following::strong[@class='value'][1]/text()"),
                 "Subsetor de Atuação": extrair("//span[contains(text(), 'Subsetor de Atuação')]/following::strong[@class='value'][1]/text()"),
-                "Subsetor de Atuação": extrair("//span[contains(text(), 'Subsetor de Atuação')]/following::strong[@class='value'][1]/text()"),
                 "Segmento de Atuação": extrair("//span[contains(text(), 'Segmento de Atuação')]/following::strong[@class='value'][1]/text()")
             }
 
-            dados_extraidos.append(dados)
+            return dados
         else:
             print(f"Erro ao acessar {codigo_acao}: {response.status_code}")
+            return None
     except Exception as e:
         print(f"Erro ao buscar {codigo_acao}: {e}")
+        return None
 
-# Processar os tickers
-for acao in lista_acoes:
-    extrair_dados_acao(acao)
-    time.sleep(1)  # Evita sobrecarga
-
-# Converter para DataFrame
-df_resultado = pd.DataFrame(dados_extraidos)
-
-# Exibir os resultados
-df_resultado
-
-# Interface Streamlit
-st.set_page_config(page_title="Ações - Dados em Tempo Real", layout="wide")
-st.title("📊 Dashboard de Ações - StatusInvest")
-
-# Entrada de tickers
-tickers = st.text_input("Digite os tickers separados por vírgula:", "petr4,vale3,bbas3").lower().split(',')
+# Entrada de tickers pelo usuário
+tickers_input = st.text_input("Digite os tickers separados por vírgula:", "petr4,vale3,bbas3")
+tickers = [t.strip().lower() for t in tickers_input.split(',') if t.strip()]
 
 # Botão para atualizar os dados
 if st.button("🔄 Atualizar Dados"):
     dados_extraidos = []
     with st.spinner("Buscando dados..."):
         for ticker in tickers:
-            dados = extrair_dados_acao(ticker.strip())
-            dados_extraidos.append(dados)
-            time.sleep(1)
+            dados = extrair_dados_acao(ticker)
+            if dados:
+                dados_extraidos.append(dados)
+            time.sleep(1)  # evitar bloqueio do site
 
-    df_resultado = pd.DataFrame(dados_extraidos)
-    st.success("Dados atualizados com sucesso!")
-    st.dataframe(df_resultado, use_container_width=True)
+    if dados_extraidos:
+        df_resultado = pd.DataFrame(dados_extraidos)
+        st.success("✅ Dados atualizados com sucesso!")
+        st.dataframe(df_resultado)
+    else:
+        st.error("❌ Nenhum dado encontrado para os tickers informados.")
