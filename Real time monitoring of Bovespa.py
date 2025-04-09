@@ -7,8 +7,8 @@ import streamlit as st
 st.set_page_config(page_title="Ações - Dados em Tempo Real", layout="wide")
 st.title("📊 Dashboard de Ações - StatusInvest")
 
-# Lista permitida
-lista_acoes = ["petr4", "vale3"]
+# Tickers fixos
+tickers_validos = ["petr4", "vale3"]
 
 def extrair_dados_acao(codigo_acao):
     url = f"https://statusinvest.com.br/acoes/{codigo_acao.lower()}"
@@ -86,39 +86,19 @@ def extrair_dados_acao(codigo_acao):
             }
 
             return dados
-        else:
-            print(f"Erro ao acessar {codigo_acao}: {response.status_code}")
-            return None
     except Exception as e:
-        print(f"Erro ao buscar {codigo_acao}: {e}")
         return None
 
-# Entrada de tickers
-tickers_input = st.text_input("Digite os tickers separados por vírgula:", "petr4,vale3")
-tickers_digitados = [t.strip().lower() for t in tickers_input.split(',') if t.strip()]
+# Extração e exibição dos dados
+dados_extraidos = []
+for ticker in tickers_validos:
+    dados = extrair_dados_acao(ticker)
+    if dados:
+        dados_extraidos.append(dados)
+    time.sleep(1)  # Evita sobrecarga no servidor
 
-# Filtra apenas os tickers autorizados
-tickers_validos = [t for t in tickers_digitados if t in lista_acoes]
-tickers_invalidos = [t for t in tickers_digitados if t not in lista_acoes]
-
-if tickers_invalidos:
-    st.warning(f"⚠️ Os seguintes tickers não estão disponíveis no momento: {', '.join(tickers_invalidos)}")
-
-if st.button("🔄 Atualizar Dados"):
-    if not tickers_validos:
-        st.error("❌ Nenhum ticker válido informado.")
-    else:
-        dados_extraidos = []
-        with st.spinner("Buscando dados..."):
-            for ticker in tickers_validos:
-                dados = extrair_dados_acao(ticker)
-                if dados:
-                    dados_extraidos.append(dados)
-                time.sleep(1)
-
-        if dados_extraidos:
-            df_resultado = pd.DataFrame(dados_extraidos)
-            st.success("✅ Dados atualizados com sucesso!")
-            st.dataframe(df_resultado)
-        else:
-            st.error("❌ Nenhum dado foi encontrado.")
+if dados_extraidos:
+    df_resultado = pd.DataFrame(dados_extraidos)
+    st.dataframe(df_resultado)
+else:
+    st.error("❌ Não foi possível obter os dados.")
