@@ -114,7 +114,7 @@ if st.button("🔄 Atualizar Dados"):
                 dados = extrair_dados_acao(ticker)
                 if dados:
                     dados_extraidos.append(dados)
-                time.sleep(1)
+                time.sleep(10)
 
         if dados_extraidos:
             df_resultado = pd.DataFrame(dados_extraidos)
