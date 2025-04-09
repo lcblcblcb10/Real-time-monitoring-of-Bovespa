@@ -7,6 +7,9 @@ import streamlit as st
 st.set_page_config(page_title="Ações - Dados em Tempo Real", layout="wide")
 st.title("📊 Dashboard de Ações - StatusInvest")
 
+# Lista permitida
+lista_acoes = ["petr4", "vale3"]
+
 def extrair_dados_acao(codigo_acao):
     url = f"https://statusinvest.com.br/acoes/{codigo_acao.lower()}"
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -89,23 +92,32 @@ def extrair_dados_acao(codigo_acao):
         print(f"Erro ao buscar {codigo_acao}: {e}")
         return None
 
-# Entrada de tickers pelo usuário
-tickers_input = st.text_input("Digite os tickers separados por vírgula:", "petr4,vale3,bbas3")
-tickers = [t.strip().lower() for t in tickers_input.split(',') if t.strip()]
+# Entrada de tickers
+tickers_input = st.text_input("Digite os tickers separados por vírgula:", "petr4,vale3")
+tickers_digitados = [t.strip().lower() for t in tickers_input.split(',') if t.strip()]
 
-# Botão para atualizar os dados
+# Filtra apenas os tickers autorizados
+tickers_validos = [t for t in tickers_digitados if t in lista_acoes]
+tickers_invalidos = [t for t in tickers_digitados if t not in lista_acoes]
+
+if tickers_invalidos:
+    st.warning(f"⚠️ Os seguintes tickers não estão disponíveis no momento: {', '.join(tickers_invalidos)}")
+
 if st.button("🔄 Atualizar Dados"):
-    dados_extraidos = []
-    with st.spinner("Buscando dados..."):
-        for ticker in tickers:
-            dados = extrair_dados_acao(ticker)
-            if dados:
-                dados_extraidos.append(dados)
-            time.sleep(1)  # evitar bloqueio do site
-
-    if dados_extraidos:
-        df_resultado = pd.DataFrame(dados_extraidos)
-        st.success("✅ Dados atualizados com sucesso!")
-        st.dataframe(df_resultado)
+    if not tickers_validos:
+        st.error("❌ Nenhum ticker válido informado.")
     else:
-        st.error("❌ Nenhum dado encontrado para os tickers informados.")
+        dados_extraidos = []
+        with st.spinner("Buscando dados..."):
+            for ticker in tickers_validos:
+                dados = extrair_dados_acao(ticker)
+                if dados:
+                    dados_extraidos.append(dados)
+                time.sleep(1)
+
+        if dados_extraidos:
+            df_resultado = pd.DataFrame(dados_extraidos)
+            st.success("✅ Dados atualizados com sucesso!")
+            st.dataframe(df_resultado)
+        else:
+            st.error("❌ Nenhum dado foi encontrado.")
